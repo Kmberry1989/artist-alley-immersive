@@ -193,6 +193,19 @@ function renderIntricacies() {
   createBenchIntricacies();
   maybeShowCarriage();
 }
+
+function spawnVisitors() {
+  const ground = document.querySelector('.ground-elements');
+  if (!ground) return;
+  ground.querySelectorAll('.visitor').forEach(v => v.remove());
+  const count = Math.random() < 0.5 ? 0 : randomInt(1, 3);
+  for (let i = 0; i < count; i++) {
+    const div = document.createElement('div');
+    div.className = 'visitor';
+    div.style.left = randomInt(5, 90) + '%';
+    ground.appendChild(div);
+  }
+}
 function getArtworkImageSrc(title) {
   const map = {
     "Highland Covered Bridge": "HighlandCoveredBridge.jpg",
@@ -245,10 +258,15 @@ function openARQuickLook(title) {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => document.body.removeChild(a), 100);
+  if (app && app.modalController) {
+    // Show fallback preview modal for platforms without Quick Look
+    setTimeout(() => app.modalController.showARModal(), 200);
+  }
 }
 // Re-render on load and occasionally (for subtle animation)
 document.addEventListener('DOMContentLoaded', () => {
   renderIntricacies();
+  spawnVisitors();
   setInterval(renderIntricacies, 12000);
 });
 // Artist Alley Virtual Experience - Interactive Controller
@@ -476,10 +494,10 @@ class ParallaxController {
 
   moveToPosition(direction) {
     if (isTransitioning) return;
-    
+
     const moveDistance = direction * 100; // Percentage of screen width
     this.targetPosition += moveDistance;
-    
+
     // Apply different speeds to each layer for parallax effect
     Object.keys(this.layers).forEach(layerName => {
       const layer = this.layers[layerName];
@@ -487,9 +505,33 @@ class ParallaxController {
         const layerDistance = moveDistance * layer.speed;
         const currentTransform = getComputedStyle(layer.element).transform;
         const currentX = this.getTransformX(currentTransform);
+        const currentY = this.getTransformY(currentTransform);
         const newX = currentX - layerDistance;
-        
-        layer.element.style.transform = `translateX(${newX}px)`;
+
+        layer.element.style.transform = `translate(${newX}px, ${currentY}px)`;
+      }
+    });
+  }
+
+  getTransformY(transformString) {
+    if (transformString === 'none') return 0;
+    const values = transformString.split('(')[1].split(')')[0].split(',');
+    return parseFloat(values[5]) || 0;
+  }
+
+  cameraJog() {
+    const offset = randomInt(-15, 15);
+    Object.keys(this.layers).forEach(layerName => {
+      const layer = this.layers[layerName];
+      if (layer.element) {
+        const currentTransform = getComputedStyle(layer.element).transform;
+        const currentX = this.getTransformX(currentTransform);
+        const currentY = this.getTransformY(currentTransform);
+        layer.element.style.transition = 'transform 0.4s ease';
+        layer.element.style.transform = `translate(${currentX}px, ${currentY + offset}px)`;
+        setTimeout(() => {
+          layer.element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        }, 400);
       }
     });
   }
@@ -1024,6 +1066,8 @@ class ArtistAlleyApp {
     isTransitioning = true;
     const frame = document.getElementById('current-artwork-frame');
     if (frame) {
+      frame.classList.add('flash-prev');
+      setTimeout(() => frame.classList.remove('flash-prev'), 300);
       frame.classList.add('fade-out');
     }
     setTimeout(() => {
@@ -1041,6 +1085,9 @@ class ArtistAlleyApp {
     }, 350);
     // Parallax movement
     this.parallax.moveToPosition(direction);
+    this.parallax.cameraJog();
+    renderIntricacies();
+    spawnVisitors();
   }
 
   updateNavigationButtons() {
