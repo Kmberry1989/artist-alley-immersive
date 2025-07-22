@@ -80,12 +80,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- Enhance navigation to play footstep sound ---
-const origPrev = ArtistAlleyApp.prototype.previousArtwork;
-ArtistAlleyApp.prototype.previousArtwork = function() { playFootstep(); origPrev.call(this); };
-const origNext = ArtistAlleyApp.prototype.nextArtwork;
-ArtistAlleyApp.prototype.nextArtwork = function() { playFootstep(); origNext.call(this); };
-const origGoTo = ArtistAlleyApp.prototype.goToArtwork;
-ArtistAlleyApp.prototype.goToArtwork = function(index) { playFootstep(); origGoTo.call(this, index); };
+// These overrides require the ArtistAlleyApp class to be defined. They are
+// applied once the DOM is ready to ensure the class is available.
+function enhanceNavigationWithFootsteps() {
+  const origPrev = ArtistAlleyApp.prototype.previousArtwork;
+  ArtistAlleyApp.prototype.previousArtwork = function() {
+    playFootstep();
+    origPrev.call(this);
+  };
+
+  const origNext = ArtistAlleyApp.prototype.nextArtwork;
+  ArtistAlleyApp.prototype.nextArtwork = function() {
+    playFootstep();
+    origNext.call(this);
+  };
+
+  const origGoTo = ArtistAlleyApp.prototype.goToArtwork;
+  ArtistAlleyApp.prototype.goToArtwork = function(index) {
+    playFootstep();
+    origGoTo.call(this, index);
+  };
+}
+
+document.addEventListener('DOMContentLoaded', enhanceNavigationWithFootsteps);
 
 // --- Responsive text fix for modals (resize observer) ---
 if (window.ResizeObserver) {
