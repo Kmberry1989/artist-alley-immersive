@@ -18,10 +18,18 @@
 
     <!-- Main Alley Experience -->
     <div id="alley-container" class="alley-container">
+        <!-- Mute Button -->
+        <button id="mute-btn" class="mute-btn" aria-label="Mute/Unmute Audio" style="opacity:0;"><span id="mute-icon">🔊</span></button>
         <!-- Background Layers (Parallax) -->
+        <audio id="ambient-audio" src="assets/audio/ambient.mp3" loop autoplay preload="auto"></audio>
+        <audio id="footstep-audio" src="assets/audio/footstep.mp3" preload="auto"></audio>
         <div class="parallax-layer background-layer">
             <div class="brick-wall"></div>
             <div class="ambient-fog"></div>
+            <!-- Semi-abstract brick pattern overlay -->
+            <div class="brick-intricacies" id="brick-intricacies"></div>
+            <!-- Occasional red vintage carriage -->
+            <div class="vintage-carriage" id="vintage-carriage" style="display:none;"></div>
         </div>
 
         <!-- Mid-ground Layers -->
@@ -49,10 +57,15 @@
 
         <!-- Artwork Display Area -->
         <div class="parallax-layer artwork-layer">
+            <div class="vignette-overlay"></div>
             <div class="artwork-spotlight"></div>
+            <!-- Tap zones for navigation -->
+            <div class="tap-zone tap-zone-left" id="tap-zone-left"></div>
+            <div class="tap-zone tap-zone-right" id="tap-zone-right"></div>
             <div class="artwork-frame" id="current-artwork-frame">
                 <div class="artwork-image" id="current-artwork-image">
-                    <div class="artwork-placeholder" id="artwork-placeholder">Highland Covered Bridge</div>
+                    <img id="artwork-img" class="gallery-glow" src="assets/image/HighlandCoveredBridge.jpg" alt="Highland Covered Bridge" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto;" />
+                    <button class="ar-btn" id="ar-btn" title="View in AR">View in AR</button>
                 </div>
                 <div class="artwork-plaque" id="artwork-plaque">
                     <h2 class="artwork-title" id="artwork-title">Highland Covered Bridge</h2>
@@ -69,6 +82,9 @@
                 <div class="potted-plant plant-right" style="right: 8%; bottom: 15%;"></div>
                 <div class="bench" style="right: 20%; bottom: 8%;"></div>
                 <div class="ground-shadow" style="left: 30%; bottom: 0; width: 40%;"></div>
+                <!-- Abstract plant/bench details -->
+                <div class="plant-intricacies" id="plant-intricacies"></div>
+                <div class="bench-intricacies" id="bench-intricacies"></div>
             </div>
         </div>
 
@@ -110,7 +126,8 @@
             <button class="modal-close" id="modal-close" aria-label="Close">×</button>
             <div class="modal-artwork">
                 <div class="modal-image" id="modal-image">
-                    <div class="modal-placeholder" id="modal-placeholder">Highland Covered Bridge</div>
+                    <img id="modal-artwork-img" class="gallery-glow" src="assets/image/HighlandCoveredBridge.jpg" alt="Highland Covered Bridge" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto;" />
+                    <button class="ar-btn" id="modal-ar-btn" title="View in AR">View in AR</button>
                 </div>
                 <div class="modal-info">
                     <h2 id="modal-title">Highland Covered Bridge</h2>

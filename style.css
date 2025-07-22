@@ -1,3 +1,197 @@
+/* Mute button styles */
+.mute-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 100;
+  background: rgba(30,30,30,0.18);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.4s, background 0.3s;
+  pointer-events: auto;
+}
+.mute-btn:hover, .mute-btn:focus {
+  background: rgba(30,30,30,0.38);
+  opacity: 1 !important;
+}
+.mute-btn.visible {
+  opacity: 1;
+}
+/* Vignette overlay */
+.vignette-overlay {
+  pointer-events: none;
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 10;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.25) 100%);
+}
+
+/* Tap zones for navigation */
+.tap-zone {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 30%;
+  z-index: 20;
+  cursor: pointer;
+  background: transparent;
+}
+.tap-zone-left { left: 0; }
+.tap-zone-right { right: 0; }
+
+/* Responsive text and overflow handling */
+.artwork-title, .artwork-artist, .artwork-details, .modal-info h2, .modal-artist, .modal-specs span, .modal-description, .modal-artist-bio {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+}
+.artwork-title, .modal-info h2 {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+}
+.artwork-artist, .modal-artist {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+}
+.artwork-details, .modal-specs span {
+  font-size: clamp(0.7rem, 1.5vw, 0.95rem);
+}
+.modal-description, .modal-artist-bio {
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
+}
+
+/* UI overlay fade on idle */
+.ui-overlay.idle {
+  opacity: 0.5;
+  transition: opacity 0.5s;
+}
+.ui-overlay {
+  transition: opacity 0.5s;
+}
+/* Semi-abstract brick intricacies overlay */
+.brick-intricacies {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  background: none;
+}
+
+/* Rendered by JS: SVG or divs for brick details */
+.brick-intricacy-shape {
+  position: absolute;
+  border-radius: 2px 8px 2px 8px;
+  opacity: 0.13;
+  background: repeating-linear-gradient(135deg, #b97c56 0 6px, #e2b48a 6px 12px, #b97c56 12px 18px);
+  box-shadow: 0 0 8px 2px #e2b48a44;
+}
+
+/* Abstract plant/bench details */
+.plant-intricacies, .bench-intricacies {
+  position: absolute;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.plant-intricacy-shape {
+  position: absolute;
+  border-radius: 50% 40% 60% 30%/60% 30% 50% 40%;
+  background: linear-gradient(120deg, #7fc97f 60%, #b2df8a 100%);
+  opacity: 0.18;
+  filter: blur(1.5px);
+}
+.bench-intricacy-shape {
+  position: absolute;
+  border-radius: 8px 16px 8px 16px;
+  background: linear-gradient(90deg, #a67c52 60%, #e2b48a 100%);
+  opacity: 0.15;
+  filter: blur(1px);
+}
+
+/* Red vintage carriage */
+.vintage-carriage {
+  position: absolute;
+  left: 10%; bottom: 7%;
+  width: 120px; height: 60px;
+  z-index: 4;
+  background: none;
+  pointer-events: none;
+}
+.vintage-carriage-svg {
+  width: 100%; height: 100%;
+  display: block;
+}
+/* Glowing effect for gallery images */
+.gallery-glow {
+  box-shadow: 0 0 32px 8px var(--color-ambient-glow, rgba(212,175,55,0.5)), 0 0 0 4px rgba(255,255,255,0.08);
+  border-radius: 12px;
+  transition: box-shadow 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* AR Button styling */
+.ar-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 2;
+  background: linear-gradient(90deg, var(--color-alley-gold, #ffe066), var(--color-alley-gold-bright, #fffbe6));
+  color: var(--color-alley-black, #222);
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 0 16px 2px rgba(212,175,55,0.3);
+  cursor: pointer;
+  opacity: 0.92;
+  transition: box-shadow 0.3s, opacity 0.3s;
+}
+.ar-btn:hover {
+  box-shadow: 0 0 32px 8px rgba(212,175,55,0.5);
+  opacity: 1;
+}
+
+/* Center the gallery view */
+.artwork-layer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+/* Smooth fade/slide transitions for artwork */
+.artwork-frame {
+  transition: opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  opacity: 1;
+}
+.artwork-frame.fade-out {
+  opacity: 0;
+  transform: translateY(40px) scale(0.98);
+  pointer-events: none;
+}
+.artwork-frame.fade-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Enhanced fairy light animation for more natural pulsing */
+@keyframes twinkle {
+  0% { opacity: 0.7; filter: brightness(0.8); }
+  20% { opacity: 1; filter: brightness(1.2); }
+  40% { opacity: 0.85; filter: brightness(0.95); }
+  60% { opacity: 1; filter: brightness(1.3); }
+  80% { opacity: 0.8; filter: brightness(0.9); }
+  100% { opacity: 0.7; filter: brightness(0.8); }
+}
 :root {
   /* Primitive Color Tokens */
   --color-white: rgba(255, 255, 255, 1);

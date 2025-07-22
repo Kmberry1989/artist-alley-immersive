@@ -1,3 +1,239 @@
+// --- Mute Button Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+  const muteBtn = document.getElementById('mute-btn');
+  const muteIcon = document.getElementById('mute-icon');
+  const ambient = document.getElementById('ambient-audio');
+  let muted = false;
+  let muteFadeTimer = null;
+  function showMuteBtn() {
+    if (muteBtn) {
+      muteBtn.classList.add('visible');
+      muteBtn.style.opacity = '1';
+      if (muteFadeTimer) clearTimeout(muteFadeTimer);
+      muteFadeTimer = setTimeout(() => {
+        muteBtn.classList.remove('visible');
+        muteBtn.style.opacity = '0';
+      }, 2500);
+    }
+  }
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      muted = !muted;
+      if (ambient) ambient.muted = muted;
+      if (muteIcon) muteIcon.textContent = muted ? '🔇' : '🔊';
+      showMuteBtn();
+    });
+  }
+  // Show on any user interaction
+  ['mousemove','mousedown','touchstart','keydown'].forEach(evt => {
+    document.addEventListener(evt, showMuteBtn);
+  });
+  // Set initial state
+  if (ambient) ambient.muted = muted;
+  if (muteIcon) muteIcon.textContent = muted ? '🔇' : '🔊';
+});
+// --- Ambient Audio and UI Fade ---
+let ambientStarted = false;
+function startAmbientAudio() {
+  if (ambientStarted) return;
+  const audio = document.getElementById('ambient-audio');
+  if (audio) {
+    audio.volume = 0.33;
+    audio.play().catch(() => {});
+    ambientStarted = true;
+  }
+}
+document.addEventListener('click', startAmbientAudio, { once: true });
+document.addEventListener('touchstart', startAmbientAudio, { once: true });
+
+function playFootstep() {
+  const audio = document.getElementById('footstep-audio');
+  if (audio) {
+    audio.currentTime = 0;
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  }
+}
+
+// --- UI Fade on Idle ---
+let uiIdleTimer = null;
+function setUIIdle() {
+  document.querySelector('.ui-overlay')?.classList.add('idle');
+}
+function clearUIIdle() {
+  document.querySelector('.ui-overlay')?.classList.remove('idle');
+  if (uiIdleTimer) clearTimeout(uiIdleTimer);
+  uiIdleTimer = setTimeout(setUIIdle, 2000);
+}
+['mousemove','mousedown','touchstart','keydown'].forEach(evt => {
+  document.addEventListener(evt, clearUIIdle);
+});
+setTimeout(setUIIdle, 3000);
+
+// --- Tap/Swipe Navigation ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Tap zones
+  const left = document.getElementById('tap-zone-left');
+  const right = document.getElementById('tap-zone-right');
+  if (left) left.addEventListener('click', () => { if (window.app) { window.app.previousArtwork(); playFootstep(); } });
+  if (right) right.addEventListener('click', () => { if (window.app) { window.app.nextArtwork(); playFootstep(); } });
+});
+
+// --- Enhance navigation to play footstep sound ---
+const origPrev = ArtistAlleyApp.prototype.previousArtwork;
+ArtistAlleyApp.prototype.previousArtwork = function() { playFootstep(); origPrev.call(this); };
+const origNext = ArtistAlleyApp.prototype.nextArtwork;
+ArtistAlleyApp.prototype.nextArtwork = function() { playFootstep(); origNext.call(this); };
+const origGoTo = ArtistAlleyApp.prototype.goToArtwork;
+ArtistAlleyApp.prototype.goToArtwork = function(index) { playFootstep(); origGoTo.call(this, index); };
+
+// --- Responsive text fix for modals (resize observer) ---
+if (window.ResizeObserver) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.modal-info, .artwork-plaque').forEach(el => {
+      new ResizeObserver(() => {
+        el.style.fontSize = '';
+        if (el.scrollHeight > el.clientHeight) {
+          el.style.fontSize = '0.95em';
+        }
+      }).observe(el);
+    });
+  });
+}
+
+
+// --- All helper functions at the top-level scope, before any class definitions ---
+function randomInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function createBrickIntricacies() {
+  const container = document.getElementById('brick-intricacies');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < 18; i++) {
+    const div = document.createElement('div');
+    div.className = 'brick-intricacy-shape';
+    div.style.width = randomInt(24, 60) + 'px';
+    div.style.height = randomInt(8, 22) + 'px';
+    div.style.left = randomInt(2, 95) + '%';
+    div.style.top = randomInt(2, 90) + '%';
+    div.style.transform = `rotate(${randomInt(-18, 18)}deg)`;
+    div.style.opacity = (Math.random() * 0.18 + 0.08).toFixed(2);
+    container.appendChild(div);
+  }
+}
+function createPlantIntricacies() {
+  const container = document.getElementById('plant-intricacies');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const div = document.createElement('div');
+    div.className = 'plant-intricacy-shape';
+    div.style.width = randomInt(18, 38) + 'px';
+    div.style.height = randomInt(28, 60) + 'px';
+    div.style.left = randomInt(3, 90) + '%';
+    div.style.top = randomInt(60, 95) + '%';
+    div.style.transform = `rotate(${randomInt(-30, 30)}deg)`;
+    div.style.opacity = (Math.random() * 0.18 + 0.08).toFixed(2);
+    container.appendChild(div);
+  }
+}
+function createBenchIntricacies() {
+  const container = document.getElementById('bench-intricacies');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const div = document.createElement('div');
+    div.className = 'bench-intricacy-shape';
+    div.style.width = randomInt(30, 60) + 'px';
+    div.style.height = randomInt(10, 18) + 'px';
+    div.style.left = randomInt(60, 85) + '%';
+    div.style.top = randomInt(80, 95) + '%';
+    div.style.transform = `rotate(${randomInt(-10, 10)}deg)`;
+    div.style.opacity = (Math.random() * 0.15 + 0.08).toFixed(2);
+    container.appendChild(div);
+  }
+}
+function maybeShowCarriage() {
+  const carriage = document.getElementById('vintage-carriage');
+  if (!carriage) return;
+  if (Math.random() < 0.33) {
+    carriage.style.display = 'block';
+    carriage.innerHTML = `<svg class="vintage-carriage-svg" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="20" width="80" height="28" rx="8" fill="#b22222" stroke="#7a1818" stroke-width="3"/>
+      <ellipse cx="30" cy="52" rx="12" ry="8" fill="#222" stroke="#7a1818" stroke-width="3"/>
+      <ellipse cx="80" cy="52" rx="12" ry="8" fill="#222" stroke="#7a1818" stroke-width="3"/>
+      <rect x="70" y="10" width="18" height="18" rx="4" fill="#fff8f0" stroke="#b22222" stroke-width="2"/>
+      <rect x="18" y="10" width="18" height="18" rx="4" fill="#fff8f0" stroke="#b22222" stroke-width="2"/>
+      <rect x="50" y="5" width="20" height="15" rx="4" fill="#fff8f0" stroke="#b22222" stroke-width="2"/>
+    </svg>`;
+  } else {
+    carriage.style.display = 'none';
+    carriage.innerHTML = '';
+  }
+}
+function renderIntricacies() {
+  createBrickIntricacies();
+  createPlantIntricacies();
+  createBenchIntricacies();
+  maybeShowCarriage();
+}
+function getArtworkImageSrc(title) {
+  const map = {
+    "Highland Covered Bridge": "HighlandCoveredBridge.jpg",
+    "Complex Autumn": "ComplexAutumn.PNG",
+    "Righteous Judgement": "RighteousJudgement.jpg",
+    "Fairy House": "FairyHouse.jpg",
+    "Kittyo's Rainbow": "KittyosRainbow.png",
+    "AI USA": "AiUsa.PNG",
+    "Grow & Glow": "GrowandGlow.PNG",
+    "Broken": "Broken.PNG",
+    "My Mind's Eye": "MyMindsEye.jpg",
+    "Flowers for Kokomo": "FlowersforKokomo.jpg",
+    "Radiant Wilds": "RadiantWild.jpg",
+    "Joan and Magdalena": "JoanandMagdalena.png",
+    "Wildflower": "Wildflower.PNG",
+    "Seeds of Hope": "SeedsofHope.png",
+    "Guardians of the Void": "GuardiansoftheVoid.jpg",
+    "Bridge Over Troubled Waters": "BridgeOverTroubledWater1.jpg"
+  };
+  return `assets/image/${map[title] || 'HighlandCoveredBridge.jpg'}`;
+}
+function getArtworkUSDZSrc(title) {
+  const map = {
+    "Highland Covered Bridge": "HighlandCoveredBridge.usdz.usdz",
+    "Complex Autumn": "ComplexAutumn.usdz.usdz",
+    "Righteous Judgement": "RighteousJudgement.usdz.usdz",
+    "Fairy House": "FairyHouse.usdz.usdz",
+    "Kittyo's Rainbow": "KittyosRainbow.usdz.usdz",
+    "AI USA": "AIUSA.usdz.usdz",
+    "Grow & Glow": "GrowandGlow.usdz.usdz",
+    "Broken": "Broken.usdz.usdz",
+    "My Mind's Eye": "MyMindsEye.usdz.usdz",
+    "Flowers for Kokomo": "FlowersforKokomo.usdz.usdz",
+    "Radiant Wilds": "Radiant wild.usdz.usdz",
+    "Joan and Magdalena": "JoanandMagdalena.usdz.usdz",
+    "Wildflower": "Wildflower.usdz.usdz",
+    "Seeds of Hope": "SeedsofHope.usdz.usdz",
+    "Guardians of the Void": "GuardiansoftheVoid.usdz.usdz",
+    "Bridge Over Troubled Waters": "BridgeOverTroubledWater1.usdz.usdz"
+  };
+  return `assets/augmented/${map[title] || 'HighlandCoveredBridge.usdz.usdz'}`;
+}
+function openARQuickLook(title) {
+  const usdz = getArtworkUSDZSrc(title);
+  const a = document.createElement('a');
+  a.href = usdz;
+  a.rel = 'ar';
+  a.setAttribute('download', '');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 100);
+}
+// Re-render on load and occasionally (for subtle animation)
+document.addEventListener('DOMContentLoaded', () => {
+  renderIntricacies();
+  setInterval(renderIntricacies, 12000);
+});
 // Artist Alley Virtual Experience - Interactive Controller
 
 /* ==============================
@@ -282,6 +518,18 @@ class ArtworkDisplay {
     if (this.detailsEl) this.detailsEl.textContent = `${artwork.medium} • ${artwork.dimensions} • ${artwork.price}`;
     if (this.placeholderEl) this.placeholderEl.textContent = artwork.title;
 
+    // Update image
+    const imgEl = document.getElementById('artwork-img');
+    if (imgEl) {
+      imgEl.src = getArtworkImageSrc(artwork.title);
+      imgEl.alt = artwork.title;
+    }
+    // Update AR button
+    const arBtn = document.getElementById('ar-btn');
+    if (arBtn) {
+      arBtn.onclick = () => openARQuickLook(artwork.title);
+    }
+
     // Update progress indicator
     const progress = ((index + 1) / artworks.length) * 100;
     if (this.progressFillEl) {
@@ -297,6 +545,63 @@ class ArtworkDisplay {
     // Trigger spotlight animation
     this.animateSpotlight();
   }
+
+// Helper: get image src from artwork title
+function getArtworkImageSrc(title) {
+  const map = {
+    "Highland Covered Bridge": "HighlandCoveredBridge.jpg",
+    "Complex Autumn": "ComplexAutumn.PNG",
+    "Righteous Judgement": "RighteousJudgement.jpg",
+    "Fairy House": "FairyHouse.jpg",
+    "Kittyo's Rainbow": "KittyosRainbow.png",
+    "AI USA": "AiUsa.PNG",
+    "Grow & Glow": "GrowandGlow.PNG",
+    "Broken": "Broken.PNG",
+    "My Mind's Eye": "MyMindsEye.jpg",
+    "Flowers for Kokomo": "FlowersforKokomo.jpg",
+    "Radiant Wilds": "RadiantWild.jpg",
+    "Joan and Magdalena": "JoanandMagdalena.png",
+    "Wildflower": "Wildflower.PNG",
+    "Seeds of Hope": "SeedsofHope.png",
+    "Guardians of the Void": "GuardiansoftheVoid.jpg",
+    "Bridge Over Troubled Waters": "BridgeOverTroubledWater1.jpg"
+  };
+  return `assets/image/${map[title] || 'HighlandCoveredBridge.jpg'}`;
+}
+
+function getArtworkUSDZSrc(title) {
+  const map = {
+    "Highland Covered Bridge": "HighlandCoveredBridge.usdz.usdz",
+    "Complex Autumn": "ComplexAutumn.usdz.usdz",
+    "Righteous Judgement": "RighteousJudgement.usdz.usdz",
+    "Fairy House": "FairyHouse.usdz.usdz",
+    "Kittyo's Rainbow": "KittyosRainbow.usdz.usdz",
+    "AI USA": "AIUSA.usdz.usdz",
+    "Grow & Glow": "GrowandGlow.usdz.usdz",
+    "Broken": "Broken.usdz.usdz",
+    "My Mind's Eye": "MyMindsEye.usdz.usdz",
+    "Flowers for Kokomo": "FlowersforKokomo.usdz.usdz",
+    "Radiant Wilds": "Radiant wild.usdz.usdz",
+    "Joan and Magdalena": "JoanandMagdalena.usdz.usdz",
+    "Wildflower": "Wildflower.usdz.usdz",
+    "Seeds of Hope": "SeedsofHope.usdz.usdz",
+    "Guardians of the Void": "GuardiansoftheVoid.usdz.usdz",
+    "Bridge Over Troubled Waters": "BridgeOverTroubledWater1.usdz.usdz"
+  };
+  return `assets/augmented/${map[title] || 'HighlandCoveredBridge.usdz.usdz'}`;
+}
+
+function openARQuickLook(title) {
+  const usdz = getArtworkUSDZSrc(title);
+  const a = document.createElement('a');
+  a.href = usdz;
+  a.rel = 'ar';
+  a.setAttribute('download', '');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 100);
+}
 
   animateSpotlight() {
     const spotlight = $('.artwork-spotlight');
@@ -554,6 +859,8 @@ class ModalController {
     const modalDescription = $('#modal-description');
     const modalArtistBio = $('#modal-artist-bio');
     const modalPlaceholder = $('#modal-placeholder');
+    const modalImg = document.getElementById('modal-artwork-img');
+    const modalARBtn = document.getElementById('modal-ar-btn');
 
     if (modalTitle) modalTitle.textContent = artwork.title;
     if (modalArtist) modalArtist.textContent = `by ${artwork.artist}`;
@@ -563,6 +870,13 @@ class ModalController {
     if (modalDescription) modalDescription.textContent = artwork.description;
     if (modalArtistBio) modalArtistBio.textContent = artwork.artistBio;
     if (modalPlaceholder) modalPlaceholder.textContent = artwork.title;
+    if (modalImg) {
+      modalImg.src = getArtworkImageSrc(artwork.title);
+      modalImg.alt = artwork.title;
+    }
+    if (modalARBtn) {
+      modalARBtn.onclick = () => openARQuickLook(artwork.title);
+    }
 
     const modal = $('#artwork-modal');
     if (modal) modal.classList.add('active');
@@ -747,25 +1061,26 @@ class ArtistAlleyApp {
 
   navigateToArtwork(newIndex, direction) {
     if (isTransitioning) return;
-    
     isTransitioning = true;
-    currentArtworkIndex = newIndex;
-
-    // Trigger parallax movement
-    this.parallax.moveToPosition(direction);
-    
-    // Update artwork display after a brief delay for effect
+    const frame = document.getElementById('current-artwork-frame');
+    if (frame) {
+      frame.classList.add('fade-out');
+    }
     setTimeout(() => {
+      currentArtworkIndex = newIndex;
       this.display.updateArtwork(currentArtworkIndex);
-    }, 300);
-
-    // Update navigation buttons
-    this.updateNavigationButtons();
-
-    // Clear transition flag
-    setTimeout(() => {
-      isTransitioning = false;
-    }, 800);
+      if (frame) {
+        frame.classList.remove('fade-out');
+        frame.classList.add('fade-in');
+        setTimeout(() => frame.classList.remove('fade-in'), 400);
+      }
+      this.updateNavigationButtons();
+      setTimeout(() => {
+        isTransitioning = false;
+      }, 400);
+    }, 350);
+    // Parallax movement
+    this.parallax.moveToPosition(direction);
   }
 
   updateNavigationButtons() {
