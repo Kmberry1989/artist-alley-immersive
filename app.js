@@ -80,12 +80,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- Enhance navigation to play footstep sound ---
-const origPrev = ArtistAlleyApp.prototype.previousArtwork;
-ArtistAlleyApp.prototype.previousArtwork = function() { playFootstep(); origPrev.call(this); };
-const origNext = ArtistAlleyApp.prototype.nextArtwork;
-ArtistAlleyApp.prototype.nextArtwork = function() { playFootstep(); origNext.call(this); };
-const origGoTo = ArtistAlleyApp.prototype.goToArtwork;
-ArtistAlleyApp.prototype.goToArtwork = function(index) { playFootstep(); origGoTo.call(this, index); };
+// These overrides require the ArtistAlleyApp class to be defined. They are
+// applied once the DOM is ready to ensure the class is available.
+function enhanceNavigationWithFootsteps() {
+  const origPrev = ArtistAlleyApp.prototype.previousArtwork;
+  ArtistAlleyApp.prototype.previousArtwork = function() {
+    playFootstep();
+    origPrev.call(this);
+  };
+
+  const origNext = ArtistAlleyApp.prototype.nextArtwork;
+  ArtistAlleyApp.prototype.nextArtwork = function() {
+    playFootstep();
+    origNext.call(this);
+  };
+
+  const origGoTo = ArtistAlleyApp.prototype.goToArtwork;
+  ArtistAlleyApp.prototype.goToArtwork = function(index) {
+    playFootstep();
+    origGoTo.call(this, index);
+  };
+}
+
+document.addEventListener('DOMContentLoaded', enhanceNavigationWithFootsteps);
 
 // --- Responsive text fix for modals (resize observer) ---
 if (window.ResizeObserver) {
@@ -176,6 +193,49 @@ function renderIntricacies() {
   createBenchIntricacies();
   maybeShowCarriage();
 }
+
+function spawnVisitors() {
+  const ground = document.querySelector('.ground-elements');
+  if (!ground) return;
+  ground.querySelectorAll('.visitor').forEach(v => v.remove());
+  const count = Math.random() < 0.5 ? 0 : randomInt(1, 3);
+  for (let i = 0; i < count; i++) {
+    const div = document.createElement('div');
+    div.className = 'visitor';
+    div.style.left = randomInt(5, 90) + '%';
+    ground.appendChild(div);
+  }
+}
+
+function triggerBlink() {
+  const overlay = document.getElementById('blink-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('blinking');
+  // Force reflow to restart the animation
+  void overlay.offsetWidth;
+  overlay.classList.add('blinking');
+}
+
+function parseDimensions(dimStr) {
+  if (!dimStr) return { width: 48, height: 48 };
+  const parts = dimStr.split('x').map(p => p.trim());
+  const parsePart = (p) => {
+    let ft = 0;
+    let inch = 0;
+    const ftMatch = p.match(/(\d+(?:\.\d+)?)'/);
+    const inMatch = p.match(/(\d+(?:\.\d+)?)\"/);
+    if (ftMatch) ft = parseFloat(ftMatch[1]);
+    if (inMatch) inch = parseFloat(inMatch[1]);
+    if (!ftMatch && !inMatch) {
+      const num = parseFloat(p);
+      if (!isNaN(num)) inch = num;
+    }
+    return ft * 12 + inch;
+  };
+  const w = parsePart(parts[0] || '');
+  const h = parsePart(parts[1] || parts[0] || '');
+  return { width: w || 48, height: h || 48 };
+}
 function getArtworkImageSrc(title) {
   const map = {
     "Highland Covered Bridge": "HighlandCoveredBridge.jpg",
@@ -228,10 +288,15 @@ function openARQuickLook(title) {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => document.body.removeChild(a), 100);
+  if (app && app.modalController) {
+    // Show fallback preview modal for platforms without Quick Look
+    setTimeout(() => app.modalController.showARModal(), 200);
+  }
 }
 // Re-render on load and occasionally (for subtle animation)
 document.addEventListener('DOMContentLoaded', () => {
   renderIntricacies();
+  spawnVisitors();
   setInterval(renderIntricacies, 12000);
 });
 // Artist Alley Virtual Experience - Interactive Controller
@@ -459,10 +524,10 @@ class ParallaxController {
 
   moveToPosition(direction) {
     if (isTransitioning) return;
-    
+
     const moveDistance = direction * 100; // Percentage of screen width
     this.targetPosition += moveDistance;
-    
+
     // Apply different speeds to each layer for parallax effect
     Object.keys(this.layers).forEach(layerName => {
       const layer = this.layers[layerName];
@@ -470,9 +535,33 @@ class ParallaxController {
         const layerDistance = moveDistance * layer.speed;
         const currentTransform = getComputedStyle(layer.element).transform;
         const currentX = this.getTransformX(currentTransform);
+        const currentY = this.getTransformY(currentTransform);
         const newX = currentX - layerDistance;
-        
-        layer.element.style.transform = `translateX(${newX}px)`;
+
+        layer.element.style.transform = `translate(${newX}px, ${currentY}px)`;
+      }
+    });
+  }
+
+  getTransformY(transformString) {
+    if (transformString === 'none') return 0;
+    const values = transformString.split('(')[1].split(')')[0].split(',');
+    return parseFloat(values[5]) || 0;
+  }
+
+  cameraJog() {
+    const offset = randomInt(-15, 15);
+    Object.keys(this.layers).forEach(layerName => {
+      const layer = this.layers[layerName];
+      if (layer.element) {
+        const currentTransform = getComputedStyle(layer.element).transform;
+        const currentX = this.getTransformX(currentTransform);
+        const currentY = this.getTransformY(currentTransform);
+        layer.element.style.transition = 'transform 0.4s ease';
+        layer.element.style.transform = `translate(${currentX}px, ${currentY + offset}px)`;
+        setTimeout(() => {
+          layer.element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        }, 400);
       }
     });
   }
@@ -503,6 +592,8 @@ class ArtworkDisplay {
     this.titleEl = $('#artwork-title');
     this.artistEl = $('#artwork-artist');
     this.detailsEl = $('#artwork-details');
+    this.descEl = $('#artwork-description');
+    this.bioEl = $('#artwork-artist-bio');
     this.placeholderEl = $('#artwork-placeholder');
     this.progressFillEl = $('#progress-fill');
     this.progressTextEl = $('#progress-text');
@@ -516,6 +607,8 @@ class ArtworkDisplay {
     if (this.titleEl) this.titleEl.textContent = artwork.title;
     if (this.artistEl) this.artistEl.textContent = `by ${artwork.artist}`;
     if (this.detailsEl) this.detailsEl.textContent = `${artwork.medium} • ${artwork.dimensions} • ${artwork.price}`;
+    if (this.descEl) this.descEl.textContent = artwork.description;
+    if (this.bioEl) this.bioEl.textContent = artwork.artistBio;
     if (this.placeholderEl) this.placeholderEl.textContent = artwork.title;
 
     // Update image
@@ -529,6 +622,15 @@ class ArtworkDisplay {
     if (arBtn) {
       arBtn.onclick = () => openARQuickLook(artwork.title);
     }
+
+    // Scale artwork frame based on dimensions
+    const dims = parseDimensions(artwork.dimensions);
+    const widthFt = dims.width / 12;
+    const heightFt = dims.height / 12;
+    const widthPx = Math.round(clamp(widthFt * 35, 120, 320));
+    const heightPx = Math.round(clamp(heightFt * 40, 160, 420));
+    document.documentElement.style.setProperty('--artwork-frame-width', `${widthPx}px`);
+    document.documentElement.style.setProperty('--artwork-frame-height', `${heightPx}px`);
 
     // Update progress indicator
     const progress = ((index + 1) / artworks.length) * 100;
@@ -657,48 +759,7 @@ class ModalController {
   bindEvents() {
     // Wait for DOM to be ready before binding events
     const bindWhenReady = () => {
-      // Artwork detail modal
-      const infoBtn = $('#info-btn');
-      const artworkModal = $('#artwork-modal');
-      const modalClose = $('#modal-close');
-      const modalTakeHome = $('#modal-take-home');
-      const modalContact = $('#modal-contact');
 
-      if (infoBtn) {
-        infoBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.showArtworkModal();
-        });
-      }
-      if (modalClose) {
-        modalClose.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.hideArtworkModal();
-        });
-      }
-      if (artworkModal) {
-        artworkModal.addEventListener('click', (e) => {
-          if (e.target === artworkModal) this.hideArtworkModal();
-        });
-      }
-      if (modalTakeHome) {
-        modalTakeHome.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.hideArtworkModal();
-          this.showARModal();
-        });
-      }
-      if (modalContact) {
-        modalContact.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.hideArtworkModal();
-          this.showContactModal();
-        });
-      }
 
       // AR preview modal
       const takeHomeBtn = $('#take-home-btn');
@@ -779,6 +840,43 @@ class ModalController {
       if (contactForm) {
         contactForm.addEventListener('submit', (e) => this.handleContactSubmit(e));
       }
+
+      // Price watch modal
+      const watchBtn = $('#watch-btn');
+      const watchModal = $('#watch-modal');
+      const watchClose = $('#watch-close');
+      const watchCancel = $('#watch-cancel');
+      const watchForm = $('#watch-form');
+
+      if (watchBtn) {
+        watchBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showWatchModal();
+        });
+      }
+      if (watchClose) {
+        watchClose.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.hideWatchModal();
+        });
+      }
+      if (watchCancel) {
+        watchCancel.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.hideWatchModal();
+        });
+      }
+      if (watchModal) {
+        watchModal.addEventListener('click', (e) => {
+          if (e.target === watchModal) this.hideWatchModal();
+        });
+      }
+      if (watchForm) {
+        watchForm.addEventListener('submit', (e) => this.handleWatchSubmit(e));
+      }
     };
 
     // Bind immediately or wait for DOM
@@ -789,46 +887,6 @@ class ModalController {
     }
   }
 
-  showArtworkModal() {
-    const artwork = artworks[currentArtworkIndex];
-    if (!artwork) return;
-
-    // Update modal content
-    const modalTitle = $('#modal-title');
-    const modalArtist = $('#modal-artist');
-    const modalMedium = $('#modal-medium');
-    const modalDimensions = $('#modal-dimensions');
-    const modalPrice = $('#modal-price');
-    const modalDescription = $('#modal-description');
-    const modalArtistBio = $('#modal-artist-bio');
-    const modalPlaceholder = $('#modal-placeholder');
-    const modalImg = document.getElementById('modal-artwork-img');
-    const modalARBtn = document.getElementById('modal-ar-btn');
-
-    if (modalTitle) modalTitle.textContent = artwork.title;
-    if (modalArtist) modalArtist.textContent = `by ${artwork.artist}`;
-    if (modalMedium) modalMedium.textContent = artwork.medium;
-    if (modalDimensions) modalDimensions.textContent = artwork.dimensions;
-    if (modalPrice) modalPrice.textContent = artwork.price;
-    if (modalDescription) modalDescription.textContent = artwork.description;
-    if (modalArtistBio) modalArtistBio.textContent = artwork.artistBio;
-    if (modalPlaceholder) modalPlaceholder.textContent = artwork.title;
-    if (modalImg) {
-      modalImg.src = getArtworkImageSrc(artwork.title);
-      modalImg.alt = artwork.title;
-    }
-    if (modalARBtn) {
-      modalARBtn.onclick = () => openARQuickLook(artwork.title);
-    }
-
-    const modal = $('#artwork-modal');
-    if (modal) modal.classList.add('active');
-  }
-
-  hideArtworkModal() {
-    const modal = $('#artwork-modal');
-    if (modal) modal.classList.remove('active');
-  }
 
   showARModal() {
     const artwork = artworks[currentArtworkIndex];
@@ -836,9 +894,13 @@ class ModalController {
 
     const arTitle = $('#ar-artwork-title');
     const arPreview = $('#ar-artwork-preview');
+    const arDesc = $('#ar-description');
+    const arBio = $('#ar-artist-bio');
 
     if (arTitle) arTitle.textContent = artwork.title;
     if (arPreview) arPreview.textContent = artwork.title;
+    if (arDesc) arDesc.textContent = artwork.description;
+    if (arBio) arBio.textContent = artwork.artistBio;
 
     const modal = $('#ar-modal');
     if (modal) modal.classList.add('active');
@@ -888,6 +950,42 @@ class ModalController {
     // Reset form and close modal
     e.target.reset();
     this.hideContactModal();
+  }
+
+  showWatchModal() {
+    const artwork = artworks[currentArtworkIndex];
+    if (!artwork) return;
+
+    const watchTitle = $('#watch-artwork-title');
+    if (watchTitle) watchTitle.textContent = `"${artwork.title}" by ${artwork.artist}`;
+
+    const modal = $('#watch-modal');
+    if (modal) modal.classList.add('active');
+  }
+
+  hideWatchModal() {
+    const modal = $('#watch-modal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  handleWatchSubmit(e) {
+    e.preventDefault();
+
+    const name = $('#watch-name').value;
+    const contact = $('#watch-contact').value;
+    const artwork = artworks[currentArtworkIndex];
+
+    console.log('Price watch request:', {
+      name,
+      contact,
+      artwork: artwork.title,
+      artist: artwork.artist
+    });
+
+    alert(`Thanks, ${name}! We'll notify you at ${contact} if the price of "${artwork.title}" drops.`);
+
+    e.target.reset();
+    this.hideWatchModal();
   }
 }
 
@@ -979,7 +1077,9 @@ class ArtistAlleyApp {
 
   previousArtwork() {
     if (isTransitioning) return;
-    
+
+    triggerBlink();
+
     const newIndex = currentArtworkIndex - 1;
     if (newIndex < 0) return;
     
@@ -988,7 +1088,9 @@ class ArtistAlleyApp {
 
   nextArtwork() {
     if (isTransitioning) return;
-    
+
+    triggerBlink();
+
     const newIndex = currentArtworkIndex + 1;
     if (newIndex >= artworks.length) return;
     
@@ -1024,6 +1126,9 @@ class ArtistAlleyApp {
     }, 350);
     // Parallax movement
     this.parallax.moveToPosition(direction);
+    this.parallax.cameraJog();
+    renderIntricacies();
+    spawnVisitors();
   }
 
   updateNavigationButtons() {
