@@ -546,63 +546,6 @@ class ArtworkDisplay {
     this.animateSpotlight();
   }
 
-// Helper: get image src from artwork title
-function getArtworkImageSrc(title) {
-  const map = {
-    "Highland Covered Bridge": "HighlandCoveredBridge.jpg",
-    "Complex Autumn": "ComplexAutumn.PNG",
-    "Righteous Judgement": "RighteousJudgement.jpg",
-    "Fairy House": "FairyHouse.jpg",
-    "Kittyo's Rainbow": "KittyosRainbow.png",
-    "AI USA": "AiUsa.PNG",
-    "Grow & Glow": "GrowandGlow.PNG",
-    "Broken": "Broken.PNG",
-    "My Mind's Eye": "MyMindsEye.jpg",
-    "Flowers for Kokomo": "FlowersforKokomo.jpg",
-    "Radiant Wilds": "RadiantWild.jpg",
-    "Joan and Magdalena": "JoanandMagdalena.png",
-    "Wildflower": "Wildflower.PNG",
-    "Seeds of Hope": "SeedsofHope.png",
-    "Guardians of the Void": "GuardiansoftheVoid.jpg",
-    "Bridge Over Troubled Waters": "BridgeOverTroubledWater1.jpg"
-  };
-  return `assets/image/${map[title] || 'HighlandCoveredBridge.jpg'}`;
-}
-
-function getArtworkUSDZSrc(title) {
-  const map = {
-    "Highland Covered Bridge": "HighlandCoveredBridge.usdz.usdz",
-    "Complex Autumn": "ComplexAutumn.usdz.usdz",
-    "Righteous Judgement": "RighteousJudgement.usdz.usdz",
-    "Fairy House": "FairyHouse.usdz.usdz",
-    "Kittyo's Rainbow": "KittyosRainbow.usdz.usdz",
-    "AI USA": "AIUSA.usdz.usdz",
-    "Grow & Glow": "GrowandGlow.usdz.usdz",
-    "Broken": "Broken.usdz.usdz",
-    "My Mind's Eye": "MyMindsEye.usdz.usdz",
-    "Flowers for Kokomo": "FlowersforKokomo.usdz.usdz",
-    "Radiant Wilds": "Radiant wild.usdz.usdz",
-    "Joan and Magdalena": "JoanandMagdalena.usdz.usdz",
-    "Wildflower": "Wildflower.usdz.usdz",
-    "Seeds of Hope": "SeedsofHope.usdz.usdz",
-    "Guardians of the Void": "GuardiansoftheVoid.usdz.usdz",
-    "Bridge Over Troubled Waters": "BridgeOverTroubledWater1.usdz.usdz"
-  };
-  return `assets/augmented/${map[title] || 'HighlandCoveredBridge.usdz.usdz'}`;
-}
-
-function openARQuickLook(title) {
-  const usdz = getArtworkUSDZSrc(title);
-  const a = document.createElement('a');
-  a.href = usdz;
-  a.rel = 'ar';
-  a.setAttribute('download', '');
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => document.body.removeChild(a), 100);
-}
-
   animateSpotlight() {
     const spotlight = $('.artwork-spotlight');
     if (spotlight) {
