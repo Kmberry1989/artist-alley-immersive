@@ -108,7 +108,7 @@
             <div class="action-buttons">
                 <button class="action-btn primary-btn" id="take-home-btn">Take It Home</button>
                 <button class="action-btn secondary-btn" id="contact-btn">Contact Artist</button>
-                <button class="action-btn secondary-btn" id="info-btn">More Info</button>
+                <button class="action-btn secondary-btn" id="watch-btn">Price Watch</button>
             </div>
 
             <!-- Thumbnail Strip -->
@@ -118,39 +118,9 @@
                 </div>
             </div>
         </div>
+        <div id="blink-overlay" class="blink-overlay"></div>
     </div>
 
-    <!-- Artwork Detail Modal -->
-    <div id="artwork-modal" class="artwork-modal">
-        <div class="modal-content">
-            <button class="modal-close" id="modal-close" aria-label="Close">×</button>
-            <div class="modal-artwork">
-                <div class="modal-image" id="modal-image">
-                    <img id="modal-artwork-img" class="gallery-glow" src="assets/image/HighlandCoveredBridge.jpg" alt="Highland Covered Bridge" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto;" />
-                    <button class="ar-btn" id="modal-ar-btn" title="View in AR">View in AR</button>
-                </div>
-                <div class="modal-info">
-                    <h2 id="modal-title">Highland Covered Bridge</h2>
-                    <p class="modal-artist" id="modal-artist">by Alyson Hatcher-Kendall</p>
-                    <div class="modal-specs">
-                        <span id="modal-medium">acrylic on marine board</span>
-                        <span id="modal-dimensions">4' x 4'</span>
-                        <span id="modal-price">$300</span>
-                    </div>
-                    <div class="modal-description" id="modal-description">
-                        A stunning representation of Indiana's covered bridge heritage, capturing the rustic charm and architectural beauty of these historic structures that dot the Hoosier countryside.
-                    </div>
-                    <div class="modal-artist-bio" id="modal-artist-bio">
-                        Alyson Hatcher-Kendall is a local artist who specializes in capturing Indiana's architectural heritage through vibrant acrylic paintings.
-                    </div>
-                    <div class="modal-actions">
-                        <button class="action-btn primary-btn" id="modal-take-home">Take It Home</button>
-                        <button class="action-btn secondary-btn" id="modal-contact">Contact Artist</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- AR Preview Modal -->
     <div id="ar-modal" class="ar-modal">
@@ -169,6 +139,10 @@
                     <div class="ar-controls">
                         <button class="action-btn secondary-btn" id="ar-resize">Resize</button>
                         <button class="action-btn primary-btn" id="ar-purchase">I Want This!</button>
+                    </div>
+                    <div class="ar-info">
+                        <div class="modal-description" id="ar-description"></div>
+                        <div class="modal-artist-bio" id="ar-artist-bio"></div>
                     </div>
                 </div>
             </div>
@@ -198,6 +172,31 @@
                     <div class="form-actions">
                         <button type="button" class="action-btn secondary-btn" id="contact-cancel">Cancel</button>
                         <button type="submit" class="action-btn primary-btn">Send Message</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price Watch Modal -->
+    <div id="watch-modal" class="watch-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="watch-close" aria-label="Close">×</button>
+            <div class="watch-content">
+                <h3>Price Drop Alert</h3>
+                <p>Notify me if <span id="watch-artwork-title">this artwork</span> gets cheaper.</p>
+                <form class="watch-form" id="watch-form">
+                    <div class="form-group">
+                        <label for="watch-name" class="form-label">Your Name</label>
+                        <input type="text" id="watch-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="watch-contact" class="form-label">Email or Phone</label>
+                        <input type="text" id="watch-contact" class="form-control" placeholder="you@example.com or 555-1234" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="action-btn secondary-btn" id="watch-cancel">Cancel</button>
+                        <button type="submit" class="action-btn primary-btn">Notify Me</button>
                     </div>
                 </form>
             </div>
