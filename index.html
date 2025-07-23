@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artist Alley - Virtual Gallery Experience</title>
     <link rel="stylesheet" href="style.css">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -63,16 +64,18 @@
             <div class="tap-zone tap-zone-left" id="tap-zone-left"></div>
             <div class="tap-zone tap-zone-right" id="tap-zone-right"></div>
             <div class="artwork-frame" id="current-artwork-frame">
-                <h2 class="artwork-title" id="artwork-title">Highland Covered Bridge</h2>
-                <p class="artwork-artist" id="artwork-artist">by Alyson Hatcher-Kendall</p>
                 <div class="artwork-plaque" id="artwork-plaque">
                     <div class="artwork-image" id="current-artwork-image">
                         <img id="artwork-img" class="gallery-glow" src="assets/image/HighlandCoveredBridge.jpg" alt="Highland Covered Bridge" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto;" />
                     </div>
                 </div>
+            </div>
+            <div class="artwork-info visible" id="artwork-info">
+                <h2 class="artwork-title" id="artwork-title">Highland Covered Bridge</h2>
+                <p class="artwork-artist" id="artwork-artist">by Alyson Hatcher-Kendall</p>
                 <p class="artwork-details" id="artwork-details">acrylic on marine board • 4' x 4' • $300</p>
-                <button class="ar-btn" id="ar-btn" title="View in AR">View in AR</button>
-                </div>
+            </div>
+            <button class="ar-btn" id="ar-btn" title="View in AR">View in AR</button>
         </div>
 
         <!-- Foreground Elements -->
@@ -132,8 +135,8 @@
                     <p>See how <span id="ar-artwork-title">this artwork</span> would look in your space</p>
                     <div class="ar-placeholder">
                         <div class="ar-camera-view">
-                            <div class="ar-artwork-preview" id="ar-artwork-preview">Highland Covered Bridge</div>
-                            <p class="ar-text">Move your phone to see the artwork in your space</p>
+                            <model-viewer id="ar-model-viewer" ar ar-modes="scene-viewer quick-look webxr" camera-controls style="width:100%;height:100%;background:transparent;"></model-viewer>
+                            <p class="ar-text">Move your device to view the artwork</p>
                         </div>
                     </div>
                     <div class="ar-controls">
