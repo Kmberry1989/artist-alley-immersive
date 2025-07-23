@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artist Alley - Virtual Gallery Experience</title>
     <link rel="stylesheet" href="style.css">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -132,8 +133,8 @@
                     <p>See how <span id="ar-artwork-title">this artwork</span> would look in your space</p>
                     <div class="ar-placeholder">
                         <div class="ar-camera-view">
-                            <div class="ar-artwork-preview" id="ar-artwork-preview">Highland Covered Bridge</div>
-                            <p class="ar-text">Move your phone to see the artwork in your space</p>
+                            <model-viewer id="ar-model-viewer" ar ar-modes="scene-viewer quick-look webxr" camera-controls style="width:100%;height:100%;background:transparent;"></model-viewer>
+                            <p class="ar-text">Move your device to view the artwork</p>
                         </div>
                     </div>
                     <div class="ar-controls">
