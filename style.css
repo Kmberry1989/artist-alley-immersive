@@ -946,8 +946,8 @@ select.form-control {
   --color-alley-cream: #faf9f6;
   
   /* Atmospheric colors */
-  --color-fairy-light: #ffe066;
-  --color-spotlight: rgba(255, 224, 102, 0.8);
+  --color-fairy-light: #ffffff;
+  --color-spotlight: rgba(255, 255, 255, 0.8);
   --color-ambient-glow: rgba(212, 175, 55, 0.3);
   --color-shadow: rgba(0, 0, 0, 0.7);
   --color-fog: rgba(255, 255, 255, 0.05);
@@ -963,8 +963,8 @@ select.form-control {
   
   /* Layout */
   --alley-height: 100vh;
-  --artwork-frame-width: 280px;
-  --artwork-frame-height: 320px;
+  --artwork-frame-width: 340px;
+  --artwork-frame-height: 380px;
 }
 
 /* Base responsive setup */
@@ -1163,9 +1163,9 @@ body {
   height: 10px;
   background: var(--color-fairy-light);
   border-radius: var(--radius-lg, 12px);
-  box-shadow: 
+  box-shadow:
     0 0 20px var(--color-fairy-light),
-    0 0 40px rgba(255, 224, 102, 0.5);
+    0 0 40px rgba(255, 255, 255, 0.5);
   animation: twinkle 3s ease-in-out infinite;
 }
 
@@ -1188,10 +1188,12 @@ body {
 
 /* Artwork Layer */
 .artwork-layer {
+  position: relative;
   z-index: 4;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 6vh;
 }
 
 .artwork-spotlight {
@@ -1204,8 +1206,8 @@ body {
   background: 
     radial-gradient(ellipse at center,
       var(--color-spotlight) 0%,
-      rgba(255, 224, 102, 0.4) 30%,
-      rgba(255, 224, 102, 0.1) 60%,
+      rgba(255, 255, 255, 0.4) 30%,
+      rgba(255, 255, 255, 0.1) 60%,
       transparent 100%);
   pointer-events: none;
   transition: all 0.8s ease-out;
@@ -1275,6 +1277,25 @@ body {
   color: var(--color-text-secondary);
   margin: 0;
   opacity: 0.8;
+}
+
+.artwork-info {
+  position: absolute;
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  max-width: 90%;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.artwork-info.visible {
+  opacity: 1;
 }
 .artwork-description,
 .artwork-artist-bio {
@@ -1431,6 +1452,35 @@ body {
   gap: 0.8rem;
   flex-wrap: wrap;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.action-buttons.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Interest Button */
+.interest-btn {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.7rem 1.4rem;
+  border-radius: 25px;
+  background: rgba(26, 26, 26, 0.8);
+  color: var(--color-alley-gold);
+  border: 1px solid var(--color-alley-gold-dark);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.interest-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
 }
 
 .action-btn {
@@ -1711,8 +1761,8 @@ body {
 /* Responsive Design */
 @media (max-width: 480px) {
   :root {
-    --artwork-frame-width: 250px;
-    --artwork-frame-height: 290px;
+    --artwork-frame-width: 300px;
+    --artwork-frame-height: 340px;
   }
   
   .progress-indicator {
@@ -1814,8 +1864,8 @@ body {
   }
   
   :root {
-    --artwork-frame-width: 220px;
-    --artwork-frame-height: 260px;
+    --artwork-frame-width: 260px;
+    --artwork-frame-height: 300px;
   }
 }
 

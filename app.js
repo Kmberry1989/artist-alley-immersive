@@ -70,6 +70,23 @@ function clearUIIdle() {
 });
 setTimeout(setUIIdle, 3000);
 
+// --- Artwork info fade ---
+let infoFadeTimer = null;
+function showArtworkInfo() {
+  const info = document.getElementById('artwork-info');
+  if (!info) return;
+  info.classList.add('visible');
+  if (infoFadeTimer) clearTimeout(infoFadeTimer);
+  infoFadeTimer = setTimeout(() => info.classList.remove('visible'), 4000);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const img = document.getElementById('current-artwork-image');
+  if (img) {
+    img.addEventListener('click', showArtworkInfo);
+    img.addEventListener('touchstart', showArtworkInfo);
+  }
+});
+
 // --- Tap/Swipe Navigation ---
 document.addEventListener('DOMContentLoaded', () => {
   // Tap zones
@@ -280,6 +297,13 @@ function getArtworkUSDZSrc(title) {
 }
 function openARQuickLook(title) {
   const usdz = getArtworkUSDZSrc(title);
+  const mv = document.getElementById('ar-model-viewer');
+  if (mv) {
+    mv.setAttribute('src', usdz);
+  }
+  if (app && app.modalController) {
+    app.modalController.showARModal();
+  }
   const a = document.createElement('a');
   a.href = usdz;
   a.rel = 'ar';
@@ -288,10 +312,6 @@ function openARQuickLook(title) {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => document.body.removeChild(a), 100);
-  if (app && app.modalController) {
-    // Show fallback preview modal for platforms without Quick Look
-    setTimeout(() => app.modalController.showARModal(), 200);
-  }
 }
 // Re-render on load and occasionally (for subtle animation)
 document.addEventListener('DOMContentLoaded', () => {
@@ -603,6 +623,8 @@ class ArtworkDisplay {
     const artwork = artworks[index];
     if (!artwork) return;
 
+    showArtworkInfo();
+
     // Update main display
     if (this.titleEl) this.titleEl.textContent = artwork.title;
     if (this.artistEl) this.artistEl.textContent = `by ${artwork.artist}`;
@@ -767,11 +789,34 @@ class ModalController {
       const arClose = $('#ar-close');
       const arResize = $('#ar-resize');
       const arPurchase = $('#ar-purchase');
+      const interestBtn = $('#interest-btn');
+      const actionOverlay = $('#action-overlay');
+
+      const hideActionOverlay = () => {
+        if (actionOverlay) actionOverlay.classList.remove('visible');
+      };
+
+      if (interestBtn) {
+        interestBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (actionOverlay) actionOverlay.classList.toggle('visible');
+        });
+      }
+      document.addEventListener('click', (e) => {
+        if (!actionOverlay || !interestBtn) return;
+        if (actionOverlay.classList.contains('visible') &&
+            !actionOverlay.contains(e.target) &&
+            e.target !== interestBtn) {
+          actionOverlay.classList.remove('visible');
+        }
+      });
 
       if (takeHomeBtn) {
         takeHomeBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          hideActionOverlay();
           this.showARModal();
         });
       }
@@ -815,6 +860,7 @@ class ModalController {
         contactBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          hideActionOverlay();
           this.showContactModal();
         });
       }
@@ -852,6 +898,7 @@ class ModalController {
         watchBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          hideActionOverlay();
           this.showWatchModal();
         });
       }
@@ -893,12 +940,12 @@ class ModalController {
     if (!artwork) return;
 
     const arTitle = $('#ar-artwork-title');
-    const arPreview = $('#ar-artwork-preview');
+    const modelViewer = document.getElementById('ar-model-viewer');
     const arDesc = $('#ar-description');
     const arBio = $('#ar-artist-bio');
 
     if (arTitle) arTitle.textContent = artwork.title;
-    if (arPreview) arPreview.textContent = artwork.title;
+    if (modelViewer) modelViewer.setAttribute('src', getArtworkUSDZSrc(artwork.title));
     if (arDesc) arDesc.textContent = artwork.description;
     if (arBio) arBio.textContent = artwork.artistBio;
 
@@ -935,21 +982,24 @@ class ModalController {
     const message = $('#contact-message').value;
     const artwork = artworks[currentArtworkIndex];
 
-    // Simulate form submission
-    console.log('Contact form submitted:', {
-      name,
-      email,
-      message,
-      artwork: artwork.title,
-      artist: artwork.artist
-    });
-
-    // Show success feedback
-    alert(`Thank you, ${name}! Your inquiry about "${artwork.title}" has been sent to ${artwork.artist}.`);
-    
-    // Reset form and close modal
-    e.target.reset();
-    this.hideContactModal();
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        message,
+        artwork: artwork.title,
+        artist: artwork.artist
+      })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(() => {
+        alert(`Thank you, ${name}! Your inquiry about "${artwork.title}" has been sent.`);
+        e.target.reset();
+        this.hideContactModal();
+      })
+      .catch(() => alert('Sorry, there was an error sending your message.'));
   }
 
   showWatchModal() {
@@ -975,17 +1025,23 @@ class ModalController {
     const contact = $('#watch-contact').value;
     const artwork = artworks[currentArtworkIndex];
 
-    console.log('Price watch request:', {
-      name,
-      contact,
-      artwork: artwork.title,
-      artist: artwork.artist
-    });
-
-    alert(`Thanks, ${name}! We'll notify you at ${contact} if the price of "${artwork.title}" drops.`);
-
-    e.target.reset();
-    this.hideWatchModal();
+    fetch('/api/price-watch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        contact,
+        artwork: artwork.title,
+        artist: artwork.artist
+      })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(() => {
+        alert(`Thanks, ${name}! We'll notify you at ${contact} if the price drops.`);
+        e.target.reset();
+        this.hideWatchModal();
+      })
+      .catch(() => alert('Sorry, there was an error processing your request.'));
   }
 }
 
