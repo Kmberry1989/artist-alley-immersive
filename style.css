@@ -165,7 +165,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80vh;
+  min-height: var(--alley-height);
 }
 
 /* Smooth fade/slide transitions for artwork */
@@ -946,8 +946,8 @@ select.form-control {
   --color-alley-cream: #faf9f6;
   
   /* Atmospheric colors */
-  --color-fairy-light: #ffe066;
-  --color-spotlight: rgba(255, 224, 102, 0.8);
+  --color-fairy-light: #ffffff;
+  --color-spotlight: rgba(255, 255, 255, 0.8);
   --color-ambient-glow: rgba(212, 175, 55, 0.3);
   --color-shadow: rgba(0, 0, 0, 0.7);
   --color-fog: rgba(255, 255, 255, 0.05);
@@ -962,9 +962,9 @@ select.form-control {
   --color-border: var(--color-alley-gold-dark);
   
   /* Layout */
-  --alley-height: 100vh;
-  --artwork-frame-width: 280px;
-  --artwork-frame-height: 320px;
+  --alley-height: 100svh;
+  --artwork-frame-width: 420px;
+  --artwork-frame-height: 480px;
 }
 
 /* Base responsive setup */
@@ -1044,6 +1044,7 @@ body {
   left: 0;
   width: 100%;
   height: 100vh;
+  height: var(--alley-height);
   background: radial-gradient(ellipse at center bottom, 
     rgba(212, 175, 55, 0.1) 0%, 
     var(--color-alley-black) 40%, 
@@ -1163,9 +1164,9 @@ body {
   height: 10px;
   background: var(--color-fairy-light);
   border-radius: var(--radius-lg, 12px);
-  box-shadow: 
+  box-shadow:
     0 0 20px var(--color-fairy-light),
-    0 0 40px rgba(255, 224, 102, 0.5);
+    0 0 40px rgba(255, 255, 255, 0.5);
   animation: twinkle 3s ease-in-out infinite;
 }
 
@@ -1188,10 +1189,13 @@ body {
 
 /* Artwork Layer */
 .artwork-layer {
+  position: relative;
   z-index: 4;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  height: var(--alley-height);
 }
 
 .artwork-spotlight {
@@ -1204,11 +1208,33 @@ body {
   background: 
     radial-gradient(ellipse at center,
       var(--color-spotlight) 0%,
-      rgba(255, 224, 102, 0.4) 30%,
-      rgba(255, 224, 102, 0.1) 60%,
+      rgba(255, 255, 255, 0.4) 30%,
+      rgba(255, 255, 255, 0.1) 60%,
       transparent 100%);
   pointer-events: none;
   transition: all 0.8s ease-out;
+}
+
+.artwork-spotlight.shake-left {
+  animation: spotlight-left 0.6s ease;
+}
+
+.artwork-spotlight.shake-right {
+  animation: spotlight-right 0.6s ease;
+}
+
+@keyframes spotlight-left {
+  0% { transform: translateX(-50%); }
+  30% { transform: translateX(calc(-50% - 20px)); }
+  60% { transform: translateX(calc(-50% + 10px)); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes spotlight-right {
+  0% { transform: translateX(-50%); }
+  30% { transform: translateX(calc(-50% + 20px)); }
+  60% { transform: translateX(calc(-50% - 10px)); }
+  100% { transform: translateX(-50%); }
 }
 
 .artwork-frame {
@@ -1220,6 +1246,9 @@ body {
   border-radius: 8px;
   box-shadow: none;
   transition: transform 0.6s ease-out;
+}
+.artwork-frame.zoom-out {
+  transform: scale(0.85);
 }
 
 .artwork-image {
@@ -1275,6 +1304,25 @@ body {
   color: var(--color-text-secondary);
   margin: 0;
   opacity: 0.8;
+}
+
+.artwork-info {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  max-width: 90%;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.artwork-info.visible {
+  opacity: 1;
 }
 .artwork-description,
 .artwork-artist-bio {
@@ -1381,15 +1429,12 @@ body {
 
 /* Progress Indicator */
 .progress-indicator {
-  position: absolute;
-  top: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1rem;
   background: rgba(26, 26, 26, 0.8);
-  padding: 0.8rem 1.5rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 25px;
   border: 1px solid var(--color-alley-gold-dark);
   backdrop-filter: blur(10px);
@@ -1431,6 +1476,35 @@ body {
   gap: 0.8rem;
   flex-wrap: wrap;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.action-buttons.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Interest Button */
+.interest-btn {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.7rem 1.4rem;
+  border-radius: 25px;
+  background: rgba(26, 26, 26, 0.8);
+  color: var(--color-alley-gold);
+  border: 1px solid var(--color-alley-gold-dark);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.interest-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
 }
 
 .action-btn {
@@ -1469,11 +1543,29 @@ body {
   border-color: var(--color-alley-gold);
 }
 
+/* Bottom UI container */
+.bottom-ui {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.4s;
+}
+.bottom-ui.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.bottom-ui.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Thumbnail Strip */
 .thumbnail-strip {
-  position: absolute;
-  bottom: 2rem;
-  left: 0;
   width: 100%;
   height: 4rem;
   overflow-x: auto;
@@ -1498,14 +1590,16 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s, box-shadow 0.3s;
   flex-shrink: 0;
-  color: var(--color-alley-gold);
-  font-size: 0.7rem;
-  font-weight: var(--font-weight-medium);
-  text-align: center;
-  line-height: 1.1;
-  padding: 2px;
+  overflow: hidden;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 .thumbnail:hover {
@@ -1711,13 +1805,12 @@ body {
 /* Responsive Design */
 @media (max-width: 480px) {
   :root {
-    --artwork-frame-width: 250px;
-    --artwork-frame-height: 290px;
+    --artwork-frame-width: 360px;
+    --artwork-frame-height: 420px;
   }
   
   .progress-indicator {
     padding: 0.6rem 1rem;
-    top: 1.5rem;
   }
   
   .progress-bar {
@@ -1801,7 +1894,6 @@ body {
 /* Landscape orientation adjustments */
 @media (max-height: 600px) and (orientation: landscape) {
   .progress-indicator {
-    top: 1rem;
     padding: 0.5rem 1rem;
   }
   
@@ -1809,13 +1901,10 @@ body {
     bottom: 1rem;
   }
   
-  .thumbnail-strip {
-    bottom: 1rem;
-  }
   
   :root {
-    --artwork-frame-width: 220px;
-    --artwork-frame-height: 260px;
+    --artwork-frame-width: 320px;
+    --artwork-frame-height: 360px;
   }
 }
 
