@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set initial state
   if (ambient) ambient.muted = muted;
   if (muteIcon) muteIcon.textContent = muted ? '🔇' : '🔊';
+  showBottomUI();
 });
 // --- Ambient Audio and UI Fade ---
 let ambientStarted = false;
@@ -69,6 +70,56 @@ function clearUIIdle() {
   document.addEventListener(evt, clearUIIdle);
 });
 setTimeout(setUIIdle, 3000);
+
+// --- Bottom UI (thumbnails + progress) ---
+let bottomUITimer = null;
+function showBottomUI() {
+  const ui = document.getElementById('bottom-ui');
+  if (!ui) return;
+  ui.classList.add('visible');
+  ui.classList.remove('hidden');
+  if (bottomUITimer) clearTimeout(bottomUITimer);
+  bottomUITimer = setTimeout(() => {
+    ui.classList.add('hidden');
+    ui.classList.remove('visible');
+  }, 4000);
+}
+
+document.addEventListener('click', (e) => {
+  if (e.clientY > window.innerHeight * 0.6) {
+    showBottomUI();
+  }
+});
+document.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  if (touch && touch.clientY > window.innerHeight * 0.6) {
+    showBottomUI();
+  }
+});
+
+// --- Artwork info toggle ---
+let infoVisible = true;
+function showArtworkInfo(show = true) {
+  const info = document.getElementById('artwork-info');
+  if (!info) return;
+  if (show) {
+    info.classList.add('visible');
+    infoVisible = true;
+  } else {
+    info.classList.remove('visible');
+    infoVisible = false;
+  }
+}
+function toggleArtworkInfo() {
+  showArtworkInfo(!infoVisible);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const img = document.getElementById('current-artwork-image');
+  if (img) {
+    img.addEventListener('click', toggleArtworkInfo);
+    img.addEventListener('touchstart', toggleArtworkInfo);
+  }
+});
 
 // --- Tap/Swipe Navigation ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -280,6 +331,13 @@ function getArtworkUSDZSrc(title) {
 }
 function openARQuickLook(title) {
   const usdz = getArtworkUSDZSrc(title);
+  const mv = document.getElementById('ar-model-viewer');
+  if (mv) {
+    mv.setAttribute('src', usdz);
+  }
+  if (app && app.modalController) {
+    app.modalController.showARModal();
+  }
   const a = document.createElement('a');
   a.href = usdz;
   a.rel = 'ar';
@@ -288,10 +346,6 @@ function openARQuickLook(title) {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => document.body.removeChild(a), 100);
-  if (app && app.modalController) {
-    // Show fallback preview modal for platforms without Quick Look
-    setTimeout(() => app.modalController.showARModal(), 200);
-  }
 }
 // Re-render on load and occasionally (for subtle animation)
 document.addEventListener('DOMContentLoaded', () => {
@@ -599,9 +653,12 @@ class ArtworkDisplay {
     this.progressTextEl = $('#progress-text');
   }
 
-  updateArtwork(index) {
+  updateArtwork(index, direction = 0) {
     const artwork = artworks[index];
     if (!artwork) return;
+
+    showArtworkInfo();
+    showBottomUI();
 
     // Update main display
     if (this.titleEl) this.titleEl.textContent = artwork.title;
@@ -627,8 +684,8 @@ class ArtworkDisplay {
     const dims = parseDimensions(artwork.dimensions);
     const widthFt = dims.width / 12;
     const heightFt = dims.height / 12;
-    const widthPx = Math.round(clamp(widthFt * 35, 120, 320));
-    const heightPx = Math.round(clamp(heightFt * 40, 160, 420));
+    const widthPx = Math.round(clamp(widthFt * 50, 160, 480));
+    const heightPx = Math.round(clamp(heightFt * 60, 220, 560));
     document.documentElement.style.setProperty('--artwork-frame-width', `${widthPx}px`);
     document.documentElement.style.setProperty('--artwork-frame-height', `${heightPx}px`);
 
@@ -645,13 +702,20 @@ class ArtworkDisplay {
     this.updateThumbnailActive(index);
 
     // Trigger spotlight animation
-    this.animateSpotlight();
+    this.animateSpotlight(direction);
   }
 
-  animateSpotlight() {
+  animateSpotlight(direction) {
     const spotlight = $('.artwork-spotlight');
     if (spotlight) {
       spotlight.style.opacity = '0';
+      spotlight.classList.remove('shake-left', 'shake-right');
+      if (direction < 0) {
+        spotlight.classList.add('shake-right');
+      } else if (direction > 0) {
+        spotlight.classList.add('shake-left');
+      }
+      void spotlight.offsetWidth;
       setTimeout(() => {
         spotlight.style.opacity = '1';
       }, 200);
@@ -767,11 +831,34 @@ class ModalController {
       const arClose = $('#ar-close');
       const arResize = $('#ar-resize');
       const arPurchase = $('#ar-purchase');
+      const interestBtn = $('#interest-btn');
+      const actionOverlay = $('#action-overlay');
+
+      const hideActionOverlay = () => {
+        if (actionOverlay) actionOverlay.classList.remove('visible');
+      };
+
+      if (interestBtn) {
+        interestBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (actionOverlay) actionOverlay.classList.toggle('visible');
+        });
+      }
+      document.addEventListener('click', (e) => {
+        if (!actionOverlay || !interestBtn) return;
+        if (actionOverlay.classList.contains('visible') &&
+            !actionOverlay.contains(e.target) &&
+            e.target !== interestBtn) {
+          actionOverlay.classList.remove('visible');
+        }
+      });
 
       if (takeHomeBtn) {
         takeHomeBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          hideActionOverlay();
           this.showARModal();
         });
       }
@@ -815,6 +902,7 @@ class ModalController {
         contactBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          hideActionOverlay();
           this.showContactModal();
         });
       }
@@ -852,6 +940,7 @@ class ModalController {
         watchBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          hideActionOverlay();
           this.showWatchModal();
         });
       }
@@ -893,12 +982,12 @@ class ModalController {
     if (!artwork) return;
 
     const arTitle = $('#ar-artwork-title');
-    const arPreview = $('#ar-artwork-preview');
+    const modelViewer = document.getElementById('ar-model-viewer');
     const arDesc = $('#ar-description');
     const arBio = $('#ar-artist-bio');
 
     if (arTitle) arTitle.textContent = artwork.title;
-    if (arPreview) arPreview.textContent = artwork.title;
+    if (modelViewer) modelViewer.setAttribute('src', getArtworkUSDZSrc(artwork.title));
     if (arDesc) arDesc.textContent = artwork.description;
     if (arBio) arBio.textContent = artwork.artistBio;
 
@@ -935,21 +1024,24 @@ class ModalController {
     const message = $('#contact-message').value;
     const artwork = artworks[currentArtworkIndex];
 
-    // Simulate form submission
-    console.log('Contact form submitted:', {
-      name,
-      email,
-      message,
-      artwork: artwork.title,
-      artist: artwork.artist
-    });
-
-    // Show success feedback
-    alert(`Thank you, ${name}! Your inquiry about "${artwork.title}" has been sent to ${artwork.artist}.`);
-    
-    // Reset form and close modal
-    e.target.reset();
-    this.hideContactModal();
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        message,
+        artwork: artwork.title,
+        artist: artwork.artist
+      })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(() => {
+        alert(`Thank you, ${name}! Your inquiry about "${artwork.title}" has been sent.`);
+        e.target.reset();
+        this.hideContactModal();
+      })
+      .catch(() => alert('Sorry, there was an error sending your message.'));
   }
 
   showWatchModal() {
@@ -975,17 +1067,23 @@ class ModalController {
     const contact = $('#watch-contact').value;
     const artwork = artworks[currentArtworkIndex];
 
-    console.log('Price watch request:', {
-      name,
-      contact,
-      artwork: artwork.title,
-      artist: artwork.artist
-    });
-
-    alert(`Thanks, ${name}! We'll notify you at ${contact} if the price of "${artwork.title}" drops.`);
-
-    e.target.reset();
-    this.hideWatchModal();
+    fetch('/api/price-watch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        contact,
+        artwork: artwork.title,
+        artist: artwork.artist
+      })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(() => {
+        alert(`Thanks, ${name}! We'll notify you at ${contact} if the price drops.`);
+        e.target.reset();
+        this.hideWatchModal();
+      })
+      .catch(() => alert('Sorry, there was an error processing your request.'));
   }
 }
 
@@ -1005,7 +1103,7 @@ class ArtistAlleyApp {
   init() {
     this.createThumbnails();
     this.bindNavigationEvents();
-    this.display.updateArtwork(currentArtworkIndex);
+    this.display.updateArtwork(currentArtworkIndex, 0);
     this.hideLoadingScreen();
   }
 
@@ -1020,7 +1118,10 @@ class ArtistAlleyApp {
       if (index === currentArtworkIndex) {
         thumbnail.classList.add('active');
       }
-      thumbnail.textContent = artwork.title;
+      const img = document.createElement('img');
+      img.src = getArtworkImageSrc(artwork.title);
+      img.alt = artwork.title;
+      thumbnail.appendChild(img);
       thumbnail.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1113,7 +1214,7 @@ class ArtistAlleyApp {
     }
     setTimeout(() => {
       currentArtworkIndex = newIndex;
-      this.display.updateArtwork(currentArtworkIndex);
+      this.display.updateArtwork(currentArtworkIndex, direction);
       if (frame) {
         frame.classList.remove('fade-out');
         frame.classList.add('fade-in');
@@ -1196,7 +1297,7 @@ window.addEventListener('orientationchange', () => {
   setTimeout(() => {
     // Recalculate positions after orientation change
     if (app) {
-      app.display.updateArtwork(currentArtworkIndex);
+      app.display.updateArtwork(currentArtworkIndex, 0);
     }
   }, 100);
 });
